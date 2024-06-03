@@ -26,6 +26,7 @@ export class UsersService {
       lastName: signUpDto.lastName,
       email: signUpDto.email,
       phoneNo: signUpDto.phoneNo,
+      address: signUpDto.address,
       encryptedPassword,
     };
     return await this.databaseService.user.create({ data: createUserDto });
