@@ -13,6 +13,7 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -34,8 +35,20 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(
+    @Query('pageNo') pageNo: string = '0',
+    @Query('pageSize') pageSize: string = '15',
+    @Query('categoryId') categoryId: string,
+    @Query('minPrice') minPrice: string,
+    @Query('maxPrice') maxPrice: string,
+  ) {
+    return this.productsService.findAll({
+      pageNo: Number.parseInt(pageNo),
+      pageSize: Number.parseInt(pageSize),
+      categoryId: Number.parseInt(categoryId),
+      minPrice: Number.parseInt(minPrice),
+      maxPrice: Number.parseInt(maxPrice),
+    });
   }
 
   @Get(':id')

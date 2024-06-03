@@ -3,7 +3,7 @@ import { DatabaseService } from 'src/database/database.service';
 import { v4 as uuidV4 } from 'uuid';
 import { CreateProductDto } from './dto/CreateProduct.dto';
 import { UpdateProductDto } from './dto/UpdateProduct.dto';
-
+import { ProductFilterCriteria } from './utils/ProductFilterCriteria';
 @Injectable()
 export class ProductsService {
   constructor(private readonly databaseService: DatabaseService) {}
@@ -21,8 +21,63 @@ export class ProductsService {
     });
   }
 
-  async findAll() {
-    return await this.databaseService.product.findMany();
+  async findAll(filterOptions: ProductFilterCriteria) {
+    const { pageNo, pageSize, categoryId, minPrice, maxPrice } = filterOptions;
+    if (Number.isNaN(pageNo) || pageNo < 0) {
+      throw new HttpException(
+        'Page no must be a number greater than or equal to 0.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (Number.isNaN(pageSize) || pageSize < 0 || pageSize > 100) {
+      throw new HttpException(
+        'Page size must be a number between 0 to 100.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const isMinPriceValid = !(!Number.isNaN(minPrice) && minPrice < 0);
+    if (!isMinPriceValid) {
+      throw new HttpException(
+        'Minimum price must be a number greater than or equal to 0.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const isMaxPriceValid = !(!Number.isNaN(maxPrice) && maxPrice < 0);
+    if (!isMaxPriceValid) {
+      throw new HttpException(
+        'Maximum price must be a number greater than or equal to 0.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return await this.databaseService.product.findMany({
+      skip: pageNo * pageSize,
+      take: pageSize,
+      where: {
+        ...(categoryId
+          ? {
+              categories: {
+                some: {
+                  id: categoryId,
+                },
+              },
+            }
+          : {}),
+        ...(isMinPriceValid && isMaxPriceValid
+          ? {
+              price: {
+                gte: minPrice,
+                lte: maxPrice,
+              },
+            }
+          : {}),
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        categories: true,
+      },
+    });
   }
 
   async findOneByProductId(productId: string) {
