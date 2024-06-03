@@ -3,17 +3,21 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UsePipes,
   ValidationPipe,
   UseGuards,
+  Put,
+  ParseIntPipe,
+  Req,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { Prisma } from '@prisma/client';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateProductDto } from './dto/CreateProduct.dto';
+import { UpdateProductDto } from './dto/UpdateProduct.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -22,7 +26,10 @@ export class ProductsController {
   @UseGuards(AuthGuard)
   @UsePipes(ValidationPipe)
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
+  create(@Body() createProductDto: CreateProductDto, @Req() request: Request) {
+    if (request['user'].sub !== createProductDto.ownerId) {
+      throw new HttpException('Forbidden!', HttpStatus.FORBIDDEN);
+    }
     return this.productsService.create(createProductDto);
   }
 
@@ -36,12 +43,19 @@ export class ProductsController {
     return this.productsService.findOneByProductId(id);
   }
 
-  @Patch(':id')
+  @UseGuards(AuthGuard)
+  @UsePipes(ValidationPipe)
+  @Put(':id')
   update(
-    @Param('id') id: string,
-    @Body() updateProductDto: Prisma.ProductUpdateInput,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProductDto: UpdateProductDto,
+    @Req() request: Request,
   ) {
-    return this.productsService.update(id, updateProductDto);
+    return this.productsService.update(
+      request['user'].sub,
+      id,
+      updateProductDto,
+    );
   }
 
   @Delete(':id')
