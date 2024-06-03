@@ -26,9 +26,13 @@ export class ProductsService {
   }
 
   async findOneByProductId(productId: string) {
-    return await this.databaseService.product.findUnique({
+    const product = await this.databaseService.product.findUnique({
       where: { productId },
+      include: { categories: true },
     });
+    if (!product)
+      throw new HttpException('Product not found!', HttpStatus.NOT_FOUND);
+    return product;
   }
 
   async findOneById(id: number) {
