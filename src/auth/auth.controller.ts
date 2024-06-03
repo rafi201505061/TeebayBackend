@@ -1,9 +1,10 @@
 import { UsersService } from './../users/users.service';
 import {
   Body,
-  ConflictException,
   Controller,
-  NotFoundException,
+  HttpCode,
+  HttpException,
+  HttpStatus,
   Post,
   UnauthorizedException,
   UseGuards,
@@ -11,14 +12,13 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { SignUpDto } from './dto/SignUpDto.dto';
-import { v4 as uuidV4 } from 'uuid';
-import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/LogInDto.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from './auth.guard';
+import * as bcrypt from 'bcrypt';
+
 @Controller('')
 export class AuthController {
-  private saltRounds: number = 10;
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -26,58 +26,33 @@ export class AuthController {
   @Post('sign-up')
   @UsePipes(ValidationPipe)
   async signUp(@Body() signUpDto: SignUpDto) {
-    try {
-      await this.usersService.findOneByEmail(signUpDto.email);
-      throw new ConflictException();
-    } catch (error) {
-      if (error.code === 'P2025') {
-        const encryptedPassword = await bcrypt.hash(
-          signUpDto.password,
-          this.saltRounds,
-        );
-        const createUserDto = {
-          userId: uuidV4(),
-          firstName: signUpDto.firstName,
-          lastName: signUpDto.lastName,
-          email: signUpDto.email,
-          phoneNo: signUpDto.phoneNo,
-          encryptedPassword,
-        };
-        const newUser = await this.usersService.create(createUserDto);
-        return newUser;
-      } else {
-        throw error;
-      }
-    }
+    return await this.usersService.create(signUpDto);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('log-in')
   @UsePipes(ValidationPipe)
   async logIn(@Body() loginDto: LoginDto) {
-    try {
-      const user = await this.usersService.findOneByEmail(loginDto.email);
-      const isMatch = await bcrypt.compare(
-        loginDto.password,
-        user?.encryptedPassword,
-      );
-
-      if (!isMatch) {
-        throw new UnauthorizedException();
-      }
-      const payload = { sub: user.id, email: user.email };
-
-      return {
-        access_token: await this.jwtService.signAsync(payload),
-      };
-    } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException();
-      } else {
-        throw error;
-      }
+    const user = await this.usersService.findOneByEmail(loginDto.email);
+    if (!user) {
+      throw new HttpException('User not found!', HttpStatus.NOT_FOUND);
     }
+    const isMatch = await bcrypt.compare(
+      loginDto.password,
+      user?.encryptedPassword,
+    );
+
+    if (!isMatch) {
+      throw new UnauthorizedException();
+    }
+    const payload = { sub: user.id, email: user.email };
+
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
 
+  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   @Post('validate-jwt-token')
   async validateJwtToken() {
