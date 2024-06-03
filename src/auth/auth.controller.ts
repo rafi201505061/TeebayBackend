@@ -7,6 +7,8 @@ import {
   Post,
   UnauthorizedException,
   UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { SignUpDto } from './dto/SignUpDto.dto';
 import { v4 as uuidV4 } from 'uuid';
@@ -22,6 +24,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
   ) {}
   @Post('sign-up')
+  @UsePipes(ValidationPipe)
   async signUp(@Body() signUpDto: SignUpDto) {
     try {
       await this.usersService.findOneByEmail(signUpDto.email);
@@ -49,6 +52,7 @@ export class AuthController {
   }
 
   @Post('log-in')
+  @UsePipes(ValidationPipe)
   async logIn(@Body() loginDto: LoginDto) {
     try {
       const user = await this.usersService.findOneByEmail(loginDto.email);
