@@ -1,18 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
+import { v4 as uuidV4 } from 'uuid';
+import { CreateProductDto } from './dto/CreateProduct.dto';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly databaseService: DatabaseService) {}
-  async create(createProductDto: Prisma.ProductCreateInput) {
+  async create(createProductDto: CreateProductDto) {
     return await this.databaseService.product.create({
-      data: createProductDto,
+      data: {
+        productId: uuidV4(),
+        ...createProductDto,
+        categories: {
+          connect: createProductDto.categories.map((id) => ({
+            id,
+          })),
+        },
+      },
     });
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll() {
+    return await this.databaseService.product.findMany();
   }
 
   async findOneByProductId(productId: string) {
