@@ -23,6 +23,7 @@ model User{
   phoneNo String
   encryptedPassword String
   products Product[]
+  acquisitions AcquisitionHistory[]
 }
 
 model Product{
@@ -40,6 +41,7 @@ model Product{
   owner User @relation(fields: [ownerId],references: [id])
   ownerId Int
   categories Category[]
+  acquisitions AcquisitionHistory[]
 }
 
 model Category{
@@ -49,9 +51,26 @@ model Category{
   products Product[]
 }
 
+model AcquisitionHistory{
+  id Int @default(autoincrement()) @id
+  acquiredAt DateTime @default(now()) 
+  acquisitionType AcquisitionType
+  product Product @relation(fields: [productId],references: [id])
+  productId Int
+  acquirer User @relation(fields: [acquirerId],references: [id])
+  acquirerId Int
+  acquisitionStart DateTime
+  acquisitionEnd DateTime
+}
+
 enum RentType{
   HOURLY
   DAILY
   MONTHLY
   YEARLY
+}
+
+enum AcquisitionType{
+  BUY
+  RENT
 }

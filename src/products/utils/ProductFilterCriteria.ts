@@ -1,4 +1,4 @@
-import { RentType } from '@prisma/client';
+import { AcquisitionType, RentType } from '@prisma/client';
 import { IsNumber, Max, Min } from 'class-validator';
 
 export class ProductFilterCriteria {
@@ -27,6 +27,6 @@ export class ProductFilterCriteria {
   userId?: number;
 
   available?: boolean;
-  acquisitionType?: 'BUY' | 'RENT';
+  acquisitionType?: AcquisitionType;
   rentType?: RentType;
 }

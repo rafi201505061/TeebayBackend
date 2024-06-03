@@ -19,7 +19,7 @@ import { ProductsService } from './products.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateProductDto } from './dto/CreateProduct.dto';
 import { UpdateProductDto } from './dto/UpdateProduct.dto';
-import { RentType } from '@prisma/client';
+import { AcquisitionType, RentType } from '@prisma/client';
 
 @Controller('products')
 export class ProductsController {
@@ -40,7 +40,7 @@ export class ProductsController {
     @Query('pageNo') pageNo: string = '0',
     @Query('pageSize') pageSize: string = '15',
     @Query('categoryId') categoryId: string,
-    @Query('acquisitionType') acquisitionType: 'BUY' | 'RENT',
+    @Query('acquisitionType') acquisitionType: AcquisitionType,
     @Query('minPrice') minPrice: string,
     @Query('maxPrice') maxPrice: string,
     @Query('rentType') rentType: RentType,
