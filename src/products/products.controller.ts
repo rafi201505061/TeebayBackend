@@ -48,6 +48,7 @@ export class ProductsController {
       categoryId: Number.parseInt(categoryId),
       minPrice: Number.parseInt(minPrice),
       maxPrice: Number.parseInt(maxPrice),
+      available: true,
     });
   }
 

@@ -24,4 +24,6 @@ export class ProductFilterCriteria {
 
   @IsNumber()
   userId?: number;
+
+  available?: boolean;
 }
