@@ -37,11 +37,7 @@ export class ProductsService {
     });
   }
 
-  async update(
-    ownerId: number,
-    id: number,
-    updateProductDto: UpdateProductDto,
-  ) {
+  async validateOwnerShip(id: number, ownerId: number) {
     const product = await this.findOneById(id);
     if (!product)
       throw new HttpException('Product not found!', HttpStatus.NOT_FOUND);
@@ -52,6 +48,14 @@ export class ProductsService {
         HttpStatus.FORBIDDEN,
       );
     }
+  }
+
+  async update(
+    ownerId: number,
+    id: number,
+    updateProductDto: UpdateProductDto,
+  ) {
+    await this.validateOwnerShip(id, ownerId);
     return await this.databaseService.product.update({
       where: { id },
       data: {
@@ -63,7 +67,8 @@ export class ProductsService {
     });
   }
 
-  async remove(productId: string) {
-    return await this.databaseService.product.delete({ where: { productId } });
+  async remove(ownerId: number, id: number) {
+    await this.validateOwnerShip(id, ownerId);
+    return await this.databaseService.product.delete({ where: { id } });
   }
 }

@@ -58,8 +58,9 @@ export class ProductsController {
     );
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
+    return this.productsService.remove(request['user'].sub, id);
   }
 }
