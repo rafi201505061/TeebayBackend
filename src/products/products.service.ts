@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { v4 as uuidV4 } from 'uuid';
 import { CreateProductDto } from './dto/CreateProduct.dto';
@@ -137,6 +142,14 @@ export class ProductsService {
     });
   }
 
+  async updateViewCount(id: number) {
+    const product = await this.findOneById(id);
+    if (!product) throw new NotFoundException();
+    return await this.databaseService.product.update({
+      where: { id },
+      data: { views: product.views + 1 },
+    });
+  }
   async remove(ownerId: number, id: number) {
     await this.validateOwnerShip(id, ownerId);
     return await this.databaseService.product.delete({ where: { id } });

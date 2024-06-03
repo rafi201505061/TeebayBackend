@@ -72,6 +72,11 @@ export class ProductsController {
     );
   }
 
+  @Put(':id/view-count')
+  updateViewCount(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.updateViewCount(id);
+  }
+
   @UseGuards(AuthGuard)
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() request: Request) {
