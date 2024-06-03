@@ -21,4 +21,7 @@ export class ProductFilterCriteria {
   @IsNumber()
   @Min(0)
   maxPrice?: number;
+
+  @IsNumber()
+  userId?: number;
 }

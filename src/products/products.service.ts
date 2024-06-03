@@ -22,7 +22,8 @@ export class ProductsService {
   }
 
   async findAll(filterOptions: ProductFilterCriteria) {
-    const { pageNo, pageSize, categoryId, minPrice, maxPrice } = filterOptions;
+    const { pageNo, pageSize, categoryId, minPrice, maxPrice, userId } =
+      filterOptions;
     if (Number.isNaN(pageNo) || pageNo < 0) {
       throw new HttpException(
         'Page no must be a number greater than or equal to 0.',
@@ -62,6 +63,8 @@ export class ProductsService {
               },
             }
           : {}),
+
+        ...(userId ? { ownerId: userId } : {}),
         ...(isMinPriceValid && isMaxPriceValid
           ? {
               price: {
