@@ -35,6 +35,8 @@ export class ProductsService {
       maxPrice,
       userId,
       available,
+      acquisitionType,
+      rentType,
     } = filterOptions;
     if (Number.isNaN(pageNo) || pageNo < 0) {
       throw new HttpException(
@@ -49,13 +51,13 @@ export class ProductsService {
       );
     }
     const isMinPriceValid = !(!Number.isNaN(minPrice) && minPrice < 0);
+    const isMaxPriceValid = !(!Number.isNaN(maxPrice) && maxPrice < 0);
     if (!isMinPriceValid) {
       throw new HttpException(
         'Minimum price must be a number greater than or equal to 0.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    const isMaxPriceValid = !(!Number.isNaN(maxPrice) && maxPrice < 0);
     if (!isMaxPriceValid) {
       throw new HttpException(
         'Maximum price must be a number greater than or equal to 0.',
@@ -78,12 +80,21 @@ export class ProductsService {
           : {}),
 
         ...(userId ? { ownerId: userId } : {}),
-        ...(isMinPriceValid && isMaxPriceValid
+        ...(acquisitionType === 'BUY' && isMinPriceValid && isMaxPriceValid
           ? {
               price: {
                 gte: minPrice,
                 lte: maxPrice,
               },
+            }
+          : {}),
+        ...(acquisitionType === 'RENT' && isMinPriceValid && isMaxPriceValid
+          ? {
+              rentPrice: {
+                gte: minPrice,
+                lte: maxPrice,
+              },
+              rentType,
             }
           : {}),
       },

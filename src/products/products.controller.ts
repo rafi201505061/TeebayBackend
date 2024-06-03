@@ -19,6 +19,7 @@ import { ProductsService } from './products.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateProductDto } from './dto/CreateProduct.dto';
 import { UpdateProductDto } from './dto/UpdateProduct.dto';
+import { RentType } from '@prisma/client';
 
 @Controller('products')
 export class ProductsController {
@@ -39,16 +40,20 @@ export class ProductsController {
     @Query('pageNo') pageNo: string = '0',
     @Query('pageSize') pageSize: string = '15',
     @Query('categoryId') categoryId: string,
+    @Query('acquisitionType') acquisitionType: 'BUY' | 'RENT',
     @Query('minPrice') minPrice: string,
     @Query('maxPrice') maxPrice: string,
+    @Query('rentType') rentType: RentType,
   ) {
     return this.productsService.findAll({
       pageNo: Number.parseInt(pageNo),
       pageSize: Number.parseInt(pageSize),
       categoryId: Number.parseInt(categoryId),
-      minPrice: Number.parseInt(minPrice),
-      maxPrice: Number.parseInt(maxPrice),
+      minPrice: Number.parseFloat(minPrice),
+      maxPrice: Number.parseFloat(maxPrice),
       available: true,
+      acquisitionType,
+      rentType,
     });
   }
 
