@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ProductsModule } from './products/products.module';
 import { authConstants } from './auth/authConstants';
 import { CategoryModule } from './category/category.module';
+import { AcquisitionHistoryModule } from './acquisition-history/acquisition-history.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CategoryModule } from './category/category.module';
     }),
     ProductsModule,
     CategoryModule,
+    AcquisitionHistoryModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, AuthService],

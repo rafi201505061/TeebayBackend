@@ -59,8 +59,8 @@ model AcquisitionHistory{
   productId Int
   acquirer User @relation(fields: [acquirerId],references: [id])
   acquirerId Int
-  acquisitionStart DateTime
-  acquisitionEnd DateTime
+  acquisitionStart Int @default(0)
+  acquisitionEnd Int @default(0)
 }
 
 enum RentType{

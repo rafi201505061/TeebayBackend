@@ -165,4 +165,11 @@ export class ProductsService {
     await this.validateOwnerShip(id, ownerId);
     return await this.databaseService.product.delete({ where: { id } });
   }
+
+  async updateAvailability(id: number) {
+    return await this.databaseService.product.update({
+      where: { id },
+      data: { available: true },
+    });
+  }
 }
