@@ -24,7 +24,16 @@ export class AcquisitionHistoryService {
           createAcquisitionHistoryDto.productId,
         );
         if (!product) throw new NotFoundException();
-        if (!product.available) throw new ConflictException();
+        if (!product.available)
+          throw new HttpException(
+            'Product not available to buy/borrow.',
+            HttpStatus.CONFLICT,
+          );
+        if (product.ownerId === createAcquisitionHistoryDto.acquirerId)
+          throw new HttpException(
+            "You can't buy/borrow your own products.",
+            HttpStatus.FORBIDDEN,
+          );
         const data = await this.databaseService.acquisitionHistory.create({
           data: {
             acquisitionType: createAcquisitionHistoryDto.acquisitionType,
