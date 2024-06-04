@@ -166,10 +166,10 @@ export class ProductsService {
     return await this.databaseService.product.delete({ where: { id } });
   }
 
-  async updateAvailability(id: number) {
+  async updateAvailability(id: number, version: number) {
     return await this.databaseService.product.update({
       where: { id },
-      data: { available: true },
+      data: { available: true, version },
     });
   }
 }

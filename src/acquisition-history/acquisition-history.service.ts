@@ -9,6 +9,7 @@ import { UpdateAcquisitionHistoryDto } from './dto/update-acquisition-history.dt
 import { DatabaseService } from 'src/database/database.service';
 import { ProductsService } from 'src/products/products.service';
 import { AcquisitionFilterCriteria } from './dto/acquisition-filter-criteria.dto';
+import { AcquisitionType } from '@prisma/client';
 
 @Injectable()
 export class AcquisitionHistoryService {
@@ -18,7 +19,17 @@ export class AcquisitionHistoryService {
   ) {}
   async create(createAcquisitionHistoryDto: CreateAcquisitionHistoryDto) {
     try {
-      await this.databaseService.$transaction(async () => {
+      return await this.databaseService.$transaction(async () => {
+        if (
+          createAcquisitionHistoryDto.acquisitionType ===
+            AcquisitionType.RENT &&
+          createAcquisitionHistoryDto.acquisitionStart >=
+            createAcquisitionHistoryDto.acquisitionEnd
+        )
+          throw new HttpException(
+            'Acquisition range not valid.',
+            HttpStatus.BAD_REQUEST,
+          );
         const product = await this.productService.findOneById(
           createAcquisitionHistoryDto.productId,
         );
@@ -33,24 +44,61 @@ export class AcquisitionHistoryService {
             "You can't buy/borrow your own products.",
             HttpStatus.FORBIDDEN,
           );
-        const data = await this.databaseService.acquisitionHistory.create({
+        if (product.version !== createAcquisitionHistoryDto.version)
+          throw new HttpException(
+            'Product not available to buy/borrow.',
+            HttpStatus.CONFLICT,
+          );
+        if (
+          createAcquisitionHistoryDto.acquisitionType === AcquisitionType.RENT
+        ) {
+          const rentHistory = await this.findRentHistoryOfProduct(
+            createAcquisitionHistoryDto.productId,
+            createAcquisitionHistoryDto.acquisitionStart,
+          );
+          const acquisitionStartTime =
+            createAcquisitionHistoryDto.acquisitionStart;
+          const acquisitionEndTime = createAcquisitionHistoryDto.acquisitionEnd;
+
+          if (
+            rentHistory.some(
+              (item) =>
+                (acquisitionStartTime >= item.acquisitionStart &&
+                  acquisitionStartTime < item.acquisitionEnd) ||
+                (acquisitionEndTime >= item.acquisitionStart &&
+                  acquisitionEndTime < item.acquisitionEnd),
+            )
+          ) {
+            throw new HttpException(
+              'Conflict with existing borrow slot.',
+              HttpStatus.CONFLICT,
+            );
+          }
+        }
+
+        await this.databaseService.acquisitionHistory.create({
           data: {
             acquisitionType: createAcquisitionHistoryDto.acquisitionType,
-            product: { connect: { id: createAcquisitionHistoryDto.productId } },
+            product: {
+              connect: {
+                id: createAcquisitionHistoryDto.productId,
+                version: createAcquisitionHistoryDto.version,
+              },
+            },
             acquirer: {
               connect: { id: createAcquisitionHistoryDto.acquirerId },
             },
           },
         });
-        await this.productService.updateAvailability(
+        const data = await this.productService.updateAvailability(
           createAcquisitionHistoryDto.productId,
+          createAcquisitionHistoryDto.version + 1,
         );
         return data;
       });
     } catch (error) {
       throw error;
     }
-    return createAcquisitionHistoryDto;
   }
 
   async findAll(searchCriteria: AcquisitionFilterCriteria) {
@@ -83,6 +131,16 @@ export class AcquisitionHistoryService {
             categories: true,
           },
         },
+      },
+    });
+  }
+
+  async findRentHistoryOfProduct(id: number, startTime: number) {
+    return await this.databaseService.acquisitionHistory.findMany({
+      where: {
+        product: { id },
+        acquisitionType: AcquisitionType.RENT,
+        acquisitionStart: { gte: startTime },
       },
     });
   }

@@ -6,4 +6,5 @@ export class CreateAcquisitionHistoryDto {
   acquirerId: number;
   acquisitionStart?: number;
   acquisitionEnd?: number;
+  version: number;
 }
