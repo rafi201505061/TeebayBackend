@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Req,
   UnauthorizedException,
   UseGuards,
   UsePipes,
@@ -26,7 +27,9 @@ export class AuthController {
   @Post('sign-up')
   @UsePipes(ValidationPipe)
   async signUp(@Body() signUpDto: SignUpDto) {
-    return await this.usersService.create(signUpDto);
+    const user = await this.usersService.create(signUpDto);
+    delete user.encryptedPassword;
+    return user;
   }
 
   @HttpCode(HttpStatus.OK)
@@ -55,7 +58,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
   @Post('validate-jwt-token')
-  async validateJwtToken() {
-    return 'Valid JWT Token';
+  async validateJwtToken(@Req() request: Request) {
+    const user = await this.usersService.findOneById(request['user'].sub);
+    delete user.encryptedPassword;
+    return user;
   }
 }
