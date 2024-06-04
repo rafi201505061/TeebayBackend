@@ -42,6 +42,7 @@ model Product{
   ownerId Int
   categories Category[]
   acquisitions AcquisitionHistory[]
+  version Int @default(0)
 }
 
 model Category{
