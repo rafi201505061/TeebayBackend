@@ -43,6 +43,7 @@ export class ProductsController {
     @Query('acquisitionType') acquisitionType: AcquisitionType,
     @Query('minPrice') minPrice: string,
     @Query('maxPrice') maxPrice: string,
+    @Query('title') title: string,
     @Query('rentType') rentType: RentType,
   ) {
     return this.productsService.findAll({
@@ -54,6 +55,7 @@ export class ProductsController {
       available: true,
       acquisitionType,
       rentType,
+      title,
     });
   }
 

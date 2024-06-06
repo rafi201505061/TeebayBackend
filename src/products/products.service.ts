@@ -14,6 +14,7 @@ export class ProductsService {
   constructor(private readonly databaseService: DatabaseService) {}
   async create(createProductDto: CreateProductDto) {
     return await this.databaseService.product.create({
+      include: { categories: true },
       data: {
         productId: uuidV4(),
         ...createProductDto,
@@ -50,15 +51,16 @@ export class ProductsService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const isMinPriceValid = !(!Number.isNaN(minPrice) && minPrice < 0);
-    const isMaxPriceValid = !(!Number.isNaN(maxPrice) && maxPrice < 0);
-    if (!isMinPriceValid) {
+
+    const isMinPriceValid = !(Number.isNaN(minPrice) || minPrice < 0);
+    const isMaxPriceValid = !(Number.isNaN(maxPrice) || maxPrice < 0);
+    if (!Number.isNaN(minPrice) && minPrice < 0) {
       throw new HttpException(
         'Minimum price must be a number greater than or equal to 0.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    if (!isMaxPriceValid) {
+    if (Number.isNaN(maxPrice) && maxPrice < 0) {
       throw new HttpException(
         'Maximum price must be a number greater than or equal to 0.',
         HttpStatus.BAD_REQUEST,
@@ -68,6 +70,7 @@ export class ProductsService {
       skip: pageNo * pageSize,
       take: pageSize,
       where: {
+        title: { mode: 'insensitive', contains: filterOptions.title },
         ...(available !== undefined ? { available } : {}),
         ...(categoryId
           ? {
@@ -80,23 +83,25 @@ export class ProductsService {
           : {}),
 
         ...(userId ? { ownerId: userId } : {}),
-        ...(acquisitionType === 'BUY' && isMinPriceValid && isMaxPriceValid
+        ...(acquisitionType === 'BUY' && (isMinPriceValid || isMaxPriceValid)
           ? {
               price: {
-                gte: minPrice,
-                lte: maxPrice,
+                ...(isMinPriceValid ? { gte: minPrice } : {}),
+                ...(isMaxPriceValid ? { lte: maxPrice } : {}),
               },
             }
           : {}),
-        ...(acquisitionType === 'RENT' && isMinPriceValid && isMaxPriceValid
+        ...(acquisitionType === 'RENT' && (isMinPriceValid || isMaxPriceValid)
           ? {
               rentPrice: {
-                gte: minPrice,
-                lte: maxPrice,
+                ...(isMinPriceValid ? { gte: minPrice } : {}),
+                ...(isMaxPriceValid ? { lte: maxPrice } : {}),
               },
               rentType,
             }
           : {}),
+        deleted: false,
+        ...(acquisitionType ? { listingType: acquisitionType } : {}),
       },
       orderBy: {
         createdAt: 'desc',
@@ -109,7 +114,7 @@ export class ProductsService {
 
   async findOneByProductId(productId: string) {
     const product = await this.databaseService.product.findUnique({
-      where: { productId },
+      where: { productId, deleted: false },
       include: { categories: true },
     });
     if (!product)
@@ -119,7 +124,7 @@ export class ProductsService {
 
   async findOneById(id: number) {
     return await this.databaseService.product.findUnique({
-      where: { id },
+      where: { id, deleted: false },
     });
   }
 
@@ -143,7 +148,8 @@ export class ProductsService {
   ) {
     await this.validateOwnerShip(id, ownerId);
     return await this.databaseService.product.update({
-      where: { id },
+      include: { categories: true },
+      where: { id, deleted: false },
       data: {
         ...updateProductDto,
         categories: {
@@ -157,19 +163,22 @@ export class ProductsService {
     const product = await this.findOneById(id);
     if (!product) throw new NotFoundException();
     return await this.databaseService.product.update({
-      where: { id },
+      where: { id, deleted: false },
       data: { views: product.views + 1 },
     });
   }
   async remove(ownerId: number, id: number) {
     await this.validateOwnerShip(id, ownerId);
-    return await this.databaseService.product.delete({ where: { id } });
+    return await this.databaseService.product.update({
+      where: { id, deleted: false },
+      data: { deleted: true },
+    });
   }
 
   async updateAvailability(id: number, version: number) {
     return await this.databaseService.product.update({
-      where: { id },
-      data: { available: true, version },
+      where: { id, deleted: false },
+      data: { available: false, version },
     });
   }
 }

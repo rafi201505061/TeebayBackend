@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Product" ALTER COLUMN "price" DROP NOT NULL,
+ALTER COLUMN "rentPrice" DROP NOT NULL,
+ALTER COLUMN "rentType" DROP NOT NULL;

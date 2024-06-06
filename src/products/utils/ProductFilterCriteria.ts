@@ -29,4 +29,5 @@ export class ProductFilterCriteria {
   available?: boolean;
   acquisitionType?: AcquisitionType;
   rentType?: RentType;
+  title?: string;
 }

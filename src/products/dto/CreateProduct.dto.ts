@@ -1,5 +1,12 @@
-import { RentType } from '@prisma/client';
-import { IsArray, IsEnum, IsNotEmpty, IsNumber, Min } from 'class-validator';
+import { AcquisitionType, RentType } from '@prisma/client';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -9,13 +16,16 @@ export class CreateProductDto {
   description: string;
 
   @Min(0)
-  price: number;
+  @IsOptional()
+  price?: number;
 
   @Min(0)
-  rentPrice: number;
+  @IsOptional()
+  rentPrice?: number;
 
   @IsEnum(RentType)
-  rentType: RentType;
+  @IsOptional()
+  rentType?: RentType;
 
   @IsNumber()
   ownerId: number;
@@ -24,4 +34,6 @@ export class CreateProductDto {
   @IsNotEmpty({ each: true })
   @IsArray()
   categories?: number[];
+
+  listingType: AcquisitionType;
 }

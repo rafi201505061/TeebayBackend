@@ -33,9 +33,9 @@ model Product{
   description String
   createdAt DateTime @default(now()) 
   updatedAt DateTime @updatedAt
-  price Float
-  rentPrice Float
-  rentType RentType
+  price Float?
+  rentPrice Float?
+  rentType RentType?
   views Int @default(0)
   available Boolean @default(true)
   owner User @relation(fields: [ownerId],references: [id])
@@ -43,6 +43,8 @@ model Product{
   categories Category[]
   acquisitions AcquisitionHistory[]
   version Int @default(0)
+  deleted Boolean @default(false)
+  listingType AcquisitionType?
 }
 
 model Category{
@@ -75,3 +77,4 @@ enum AcquisitionType{
   BUY
   RENT
 }
+

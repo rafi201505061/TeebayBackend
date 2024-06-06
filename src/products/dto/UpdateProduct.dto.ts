@@ -1,4 +1,4 @@
-import { RentType } from '@prisma/client';
+import { AcquisitionType, RentType } from '@prisma/client';
 
 export class UpdateProductDto {
   title?: string;
@@ -7,4 +7,5 @@ export class UpdateProductDto {
   rentPrice?: number;
   rentType?: RentType;
   categories?: number[] = [];
+  listingTye?: AcquisitionType;
 }
